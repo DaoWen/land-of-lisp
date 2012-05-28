@@ -1,4 +1,4 @@
-land-of-lisp
+Land-of-Lisp
 ============
 
-Nick's implementations of the games in Conrad Barski's Land of Lisp in Clojure.
+My implementations of the problems in Conrad Barski's Land of Lisp in Clojure.
