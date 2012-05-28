@@ -28,14 +28,11 @@
 ;; Tests
 
 (deftest play-two-games
-  (let [guesses
-        (fn []
-          (is (= (smaller) 25))
-          (is (= (smaller) 12))
-          (is (= (bigger)  18))
-          (is (= (bigger)  21))
-          (is (= (bigger)  23)))]
+  (doseq [i (range 2)]
     (is (= (guess-my-number) 50))
-    (guesses)
-    (is (= (start-over) 50))
-    (guesses)))
+    (is (= (smaller) 25))
+    (is (= (smaller) 12))
+    (is (= (bigger)  18))
+    (is (= (bigger)  21))
+    (is (= (bigger)  23))
+    (is (= (start-over) 50))))
