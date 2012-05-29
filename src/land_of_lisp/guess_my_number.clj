@@ -2,6 +2,9 @@
   (:use [land-of-lisp.core]
         [clojure.test]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Chapter 2: Guess My Number
+
 (def big-start 100)
 (def small-start 1)
 
