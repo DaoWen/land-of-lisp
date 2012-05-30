@@ -1,6 +1,5 @@
 (ns land-of-lisp.guess-my-number
-  (:use [land-of-lisp.core]
-        [clojure.test]))
+  (:use [land-of-lisp.core]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Chapter 2: Guess My Number
@@ -26,16 +25,3 @@
   (defparam *big* big-start)
   (defparam *small* small-start)
   (guess-my-number))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Tests
-
-(deftest play-two-games
-  (doseq [i (range 2)]
-    (is (= (guess-my-number) 50))
-    (is (= (smaller) 25))
-    (is (= (smaller) 12))
-    (is (= (bigger)  18))
-    (is (= (bigger)  21))
-    (is (= (bigger)  23))
-    (is (= (start-over) 50))))
