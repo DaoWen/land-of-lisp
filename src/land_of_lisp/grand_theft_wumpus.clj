@@ -72,8 +72,8 @@
   (loop [edges edge-amap, cops (vec edges-with-cops)]
     (if-let [cop (peek cops)]
       (let [[a b] cop
-            edges'  (assoc-in edges [a b :cops] true)
-            edges'' (assoc-in edges [b a :cops] true)]
+            edges'  (assoc-in edges  [a b :cops] true)
+            edges'' (assoc-in edges' [b a :cops] true)]
         (recur edges'' (pop cops)))
       edges)))
 
@@ -108,7 +108,7 @@
            (let [w (cond (= n wumpus)           {:wumpus true}
                          (within-two? n wumpus edge-amap) {:blood true})
                  g (cond (glow-worms? n)        {:glow-worms true}
-                         (some #(within-two? n % edge-amap) glow-worms) {:lights true})
+                         (some #(within-one? n % edge-amap) glow-worms) {:lights true})
                  c (when (some #(cops? n %) (neighbors n edge-amap)) {:sirens true})
                  attrs (merge {} w g c)]
              [n attrs])))
