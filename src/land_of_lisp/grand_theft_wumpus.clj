@@ -126,11 +126,7 @@
         edges (distinct (for [[a bs] city-edges
                               [b vs] bs]
                           [(min a b) (max a b)]))
-        break (fn [[a b]] (let [c (gensym 'cops)] [[a c] [c b]]))
-        edges (mapcat #(if (:cops (get-in city-edges %)) (break %) [%]) edges)
-        labels (into {} (map (fn [n] [n (node-label n city-nodes)]) nodes))
-        cop-nodes (filter symbol? (map first edges))
-        labels (into labels (map (fn [n] [n "cops"]) cop-nodes))]
+        labels (into {} (map (fn [n] [n (node-label n city-nodes)]) nodes))]
     (draw-graph edges labels)))
 
 (defn draw-city []
