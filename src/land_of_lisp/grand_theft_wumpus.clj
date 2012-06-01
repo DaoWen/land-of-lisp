@@ -121,17 +121,37 @@
        (interpose \space)
        (apply str)))
 
-(defn draw-city [])
-
-(defn draw-full-city []
-  (let [node-amap *congestion-city-nodes*
-        nodes (keys node-amap)
-        edges (for [[a bs] *congestion-city-edges*
-                    [b vs] bs
-                    :when (< a b)]
-                [a b])
-        labels (into {} (map (fn [n] [n (node-label n node-amap)]) nodes))]
+(defn draw-city-graph [city-nodes city-edges]
+  (let [nodes (keys city-nodes)
+        edges (distinct (for [[a bs] city-edges
+                              [b vs] bs]
+                          [(min a b) (max a b)]))
+        labels (into {} (map (fn [n] [n (node-label n city-nodes)]) nodes))]
     (draw-graph edges labels)))
+
+(defn draw-city []
+  (draw-city-graph *congestion-city-nodes* *congestion-city-edges*))
+
+(defn node-visited? [n]
+  (*visited-nodes* n))
+
+(defn known-city-nodes []
+  (let [fringe (mapcat #(neighbors % *congestion-city-edges*) *visited-nodes*)
+        node-visible? (into *visited-nodes* fringe)]
+    (into {}
+          (for [[n attrs] *congestion-city-nodes*
+                :when (node-visible? n)]
+            (cond (= *player-pos* n) [n (merge attrs '{* *})]
+                  (node-visited? n)  [n attrs]
+                  :else              [n '{? ?}])))))
+
+(defn known-city-edges []
+  (->> *congestion-city-edges*
+       (filter (fn [[a]] (node-visited? a)))
+       (into {})))
+
+(defn draw-known-city []
+  (draw-city-graph (known-city-nodes) (known-city-edges)))
 
 ;;;;;; game start functions ;;;;;;
 
@@ -145,5 +165,11 @@
   (setf *congestion-city-nodes* (make-city-nodes *congestion-city-edges*))
   (setf *player-pos* (find-empty-node *congestion-city-nodes*))
   (setf *visited-nodes* #{*player-pos*})
-  (draw-city))
+  (draw-known-city))
 
+;;;;;; game control functions ;;;;;;
+
+(defn walk [pos]
+  (setf *visited-nodes* (conj *visited-nodes* pos))
+  (setf *player-pos* pos)
+  (draw-known-city))
