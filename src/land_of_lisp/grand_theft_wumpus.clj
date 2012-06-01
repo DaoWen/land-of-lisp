@@ -126,7 +126,11 @@
         edges (distinct (for [[a bs] city-edges
                               [b vs] bs]
                           [(min a b) (max a b)]))
-        labels (into {} (map (fn [n] [n (node-label n city-nodes)]) nodes))]
+        break (fn [[a b]] (let [c (gensym 'cops)] [[a c] [c b]]))
+        edges (mapcat #(if (:cops (get-in city-edges %)) (break %) [%]) edges)
+        labels (into {} (map (fn [n] [n (node-label n city-nodes)]) nodes))
+        cop-nodes (filter symbol? (map first edges))
+        labels (into labels (map (fn [n] [n "cops"]) cop-nodes))]
     (draw-graph edges labels)))
 
 (defn draw-city []
@@ -169,7 +173,30 @@
 
 ;;;;;; game control functions ;;;;;;
 
+(defn handle-new-place [edge pos charging]
+  (let [node (*congestion-city-nodes* pos)
+        has-worm (and (:glow-worms node)
+                       (not (node-visited? pos)))]
+    (setf *visited-nodes* (conj *visited-nodes* pos))
+    (setf *player-pos* pos)
+    (draw-known-city)
+    (cond (:cops edge) (println "You ran into the cops. Game Over.")
+          (:wumpus node) (println (if charging
+                                    "You got the Wumpus!"
+                                    "You got capped by the Wumpus! Game Over."))
+          charging (println "You wasted your last bullet. Game Over.")
+          has-worm (let [pos' (random-node)]
+                     (println (format "You ran into a Glow Worm Gang! You're now at %d." pos'))
+                     (handle-new-place nil pos' nil)))))
+
+(defn handle-direction [pos charging]
+  (let [edge (get-in *congestion-city-edges* [*player-pos* pos])]
+    (if edge
+      (handle-new-place edge pos charging)
+      (println "You can't go that way!"))))
+
 (defn walk [pos]
-  (setf *visited-nodes* (conj *visited-nodes* pos))
-  (setf *player-pos* pos)
-  (draw-known-city))
+  (handle-direction pos nil))
+
+(defn charge [pos]
+  (handle-direction pos true))
