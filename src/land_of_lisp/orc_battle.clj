@@ -17,36 +17,39 @@
 
 ;;;;;; monster types ;;;;;;
 
-(defrecord Monster [health])
-
-(defrecord Orc [health club-level])
-
-(defrecord Hydra [health])
-
-(defrecord SlimeMold [health sliminess])
-
-(defrecord Brigand [health])
-
 (defn randval [n] (inc (rand-int (max 1 n))))
 
-(defn rand-health [] (randval 10))
+(defn make-monster []
+  {:health (randval 10)})
+
+(defn make-orc []
+  (assoc (make-monster)
+         :type :orc
+         :club-level (randval 8)))
+
+(defn make-hydra []
+  (assoc (make-monster) :type :hydra))
+
+(defn make-slime-mold []
+  (assoc (make-monster)
+         :type :slime-mold
+         :sliminess (randval 5)))
+
+(defn make-brigand []
+  (assoc (make-monster) :type :brigand))
+
+(defn monster-type [m] (name (:type m))) 
 
 (def monster-builders
-  [#(Orc.       (rand-health) (randval 8))
-   #(Hydra.     (rand-health))
-   #(SlimeMold. (rand-health) (randval 5))
-   #(Brigand.   (rand-health))])
+  [make-orc
+   make-hydra
+   make-slime-mold
+   make-brigand])
 
 ;;;;;; game monsters functions ;;;;;;
 
-(defn monster-type [m]
-  (->> (type m)
-       .getName
-       (re-seq #"[^./]+")
-       last))
-
 (defn update-monster-health [m op delta]
-  (let [index (.indexOf *monsters* m)
+  (let [[index] (keep-indexed #(if (identical? m %2) %) *monsters*)
         health' (op (:health m) delta)
         m' (assoc m :health health')
         monsters' (assoc *monsters* index m')]
@@ -61,9 +64,9 @@
 
 (defn random-monster []
   (let [m (rand-nth *monsters*)]
-    (if (monster-dead? m) (recur) m)))
+    (if (monster-dead? m) (recur) m)))       
 
-(defmulti monster-hit (fn [m x] (type m)))
+(defmulti monster-hit (fn [m x] (:type m)))
 
 (defmethod monster-hit :default [m x]
   (update-monster-health m - x)
@@ -74,22 +77,22 @@
       (format "You hit the %s knocking off %d health points!"
               (monster-type m) x))))
 
-(defmethod monster-hit Hydra [m x]
+(defmethod monster-hit :hydra [m x]
   (println
     (if (monster-dead? (update-monster-health m - x))
       "The corpse of the fully decapitated and decapacitated hydra falls to the floor!"
       (format "You lop off %d of the hydra's heads!" x))))
 
-(defmulti monster-attack type)
+(defmulti monster-attack :type)
 
-(defmethod monster-attack Orc [m]
+(defmethod monster-attack :orc [m]
   (let [x (randval (:club-level m))]
     (println
       (format
         "An orc swings his club at you and knocks off %d of your health points." x))
     (setf *player-health* (- *player-health* x))))
 
-(defmethod monster-attack Hydra [m]
+(defmethod monster-attack :hydra [m]
   (let [x (randval (quot (:health m) 2))]
     (println
       (format "A hydra attacks you with of its heads! It also grows back one more head!"
@@ -97,7 +100,7 @@
     (update-monster-health m + 1)
     (setf *player-health* (- *player-health* x))))
 
-(defmethod monster-attack SlimeMold [m]
+(defmethod monster-attack :slime-mold [m]
   (let [x (randval (:sliminess m))]
     (println
       (format "A slime mold wraps around your legs and decreases your agility by %d!" x))
@@ -106,7 +109,7 @@
       (println "It also squirts in your face, taking away a health point!")
       (setf *player-health* (- *player-health* 1)))))
 
-(defmethod monster-attack Brigand [m]
+(defmethod monster-attack :brigand [m]
   (let [x (max *player-health* *player-agility* *player-strength*)]
     (condp = x
       *player-health*
@@ -119,16 +122,16 @@
       (do (println "A brigand cuts your arm with his whip, taking off 2 strength points!")
           (setf *player-strength* (- *player-strength* 2))))))
 
-(defmulti monster-desc type)
+(defmulti monster-desc :type)
 
 (defmethod monster-desc :default [m]
   (format "A fierce %s!" (monster-type m)))
 
-(defmethod monster-desc Hydra [m]
+(defmethod monster-desc :hydra [m]
   (format "A malicious hydra with %d heads."
           (:health m)))
 
-(defmethod monster-desc SlimeMold [m]
+(defmethod monster-desc :slime-mold [m]
   (format "A slime mold with a sliminess of %s."
           (:sliminess m)))
 
